@@ -47,7 +47,7 @@ describe('`updateQuality`', () => {
       expect(standardItem).toStrictEqual(expectedItem);
     });
 
-    it('quality increases faster after sell in reaches zero', () => {
+    it('quality increases twice as fast after sell in reaches zero', () => {
       const brieItem = new Item('Aged Brie', 0, 36);
       const expectedItem = new Item('Aged Brie', -1, 38);
       updateQuality([brieItem]);
