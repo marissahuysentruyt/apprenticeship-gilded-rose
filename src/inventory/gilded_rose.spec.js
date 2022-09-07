@@ -4,8 +4,8 @@ import { Item, updateQuality } from './gilded_rose';
 // once sell_in hits 0, quality goes down twice as fast
 describe('`updateQuality`', () => {
   // separated items into their own describe blocks with their own rules
-  describe('haunted shoe', () => {
-    it('decreases the sell in and quality by one for a Haunted Shoe', () => {
+  describe('standard items', () => {
+    it('decreases the sell in and quality by one', () => {
       // arrange
       const standardItem = new Item('Haunted Shoe', 10, 10);
       const expectedItem = new Item('Haunted Shoe', 9, 9);
@@ -15,14 +15,30 @@ describe('`updateQuality`', () => {
       expect(standardItem).toStrictEqual(expectedItem);
     });
 
-    // quality decreases quality by 2x after sell_in
-    it('quality decreases by twice as fast when sell in is 0 or less', () => {
+    // quality cannot exceed 50
+    it('quality is never higher than 50', () => {
+      const standardItem = new Item('Haunted Shoe', 37, 50);
+      const expectedItem = new Item('Haunted Shoe', 36, 50);
+      updateQuality([standardItem]);
+      expect(standardItem).toStrictEqual(expectedItem);
+    });
+
+    // quality decreases by 2x after sell_in is 0
+    it('quality decreases by twice as fast when sell in reaches zero', () => {
       // arrange
       const standardItem = new Item('Elixir of the Mongoose', 0, 26);
       const expectedItem = new Item('Elixir of the Mongoose', -1, 24);
       // act
       updateQuality([standardItem]);
       // assert
+      expect(standardItem).toStrictEqual(expectedItem);
+    });
+
+    // quality cannot be negative
+    it('quality is never negative', () => {
+      const standardItem = new Item('Haunted Shoe', -3, 0);
+      const expectedItem = new Item('Haunted Shoe', -4, 0);
+      updateQuality([standardItem]);
       expect(standardItem).toStrictEqual(expectedItem);
     });
   });
@@ -40,22 +56,23 @@ describe('`updateQuality`', () => {
       expect(increaseItem).toStrictEqual(expectedIncreaseItem);
     });
 
-    it('brie quality is never higher than 50', () => {
-      const standardItem = new Item('Aged Brie', 37, 50);
-      const expectedItem = new Item('Aged Brie', 36, 50);
-      updateQuality([standardItem]);
-      expect(standardItem).toStrictEqual(expectedItem);
-    });
-
     it('quality increases twice as fast after sell in reaches zero', () => {
       const brieItem = new Item('Aged Brie', 0, 36);
       const expectedItem = new Item('Aged Brie', -1, 38);
       updateQuality([brieItem]);
       expect(brieItem).toStrictEqual(expectedItem);
     });
+
+    // quality cannot exceed 50
+    it('quality is never higher than 50', () => {
+      const standardItem = new Item('Aged Brie', 37, 50);
+      const expectedItem = new Item('Aged Brie', 36, 50);
+      updateQuality([standardItem]);
+      expect(standardItem).toStrictEqual(expectedItem);
+    });
   });
 
-  // backstage passes/backstage item
+  // backstage passes/increase item
   describe('backstage passes', () => {
     it('decreases quality to 0 when sell in is 0', () => {
       const backstageItem = new Item('Backstage passes to a TAFKAL80ETC concert', 0, 20);
@@ -64,40 +81,49 @@ describe('`updateQuality`', () => {
       updateQuality([backstageItem]);
       expect(backstageItem).toStrictEqual(expectedBackstageItem);
     });
-  });
 
-  describe('quality', () => {
-    it('quality is never negative', () => {
-      const standardItem = new Item('Haunted Shoe', -3, 0);
-      const expectedItem = new Item('Haunted Shoe', -4, 0);
-      updateQuality([standardItem]);
-      expect(standardItem).toStrictEqual(expectedItem);
-    });
-
-    it('special item quality changes at a different rate', () => {
-      const legendaryItem = new Item('Sulfuras, Hand of Ragnaros', 0, 80);
-      const expectedLegendaryItem = new Item('Sulfuras, Hand of Ragnaros', 0, 80);
-
+    it('increases quality by one if the sell in is higher than 10', () => {
       const firstBackstageItem = new Item('Backstage passes to a TAFKAL80ETC concert', 11, 20);
       const expectedFirstBackstageItem = new Item('Backstage passes to a TAFKAL80ETC concert', 10, 21);
 
-      const secondBackstageItem = new Item('Backstage passes to a TAFKAL80ETC concert', 8, 20);
-      const expectedsecondBackstageItem = new Item('Backstage passes to a TAFKAL80ETC concert', 7, 22);
+      updateQuality([firstBackstageItem]);
+      expect(firstBackstageItem).toStrictEqual(expectedFirstBackstageItem);
+    });
 
+    it('increases quality by two if the sell in is between 6-10', () => {
+      const secondBackstageItem = new Item('Backstage passes to a TAFKAL80ETC concert', 8, 20);
+      const expectedSecondBackstageItem = new Item('Backstage passes to a TAFKAL80ETC concert', 7, 22);
+
+      updateQuality([secondBackstageItem]);
+      expect(secondBackstageItem).toStrictEqual(expectedSecondBackstageItem);
+    });
+
+    it('increases quality by three if the sell in is 5 or less', () => {
       const thirdBackstageItem = new Item('Backstage passes to a TAFKAL80ETC concert', 5, 20);
       const expectedThirdBackstageItem = new Item('Backstage passes to a TAFKAL80ETC concert', 4, 23);
 
-      updateQuality([legendaryItem]);
-      updateQuality([firstBackstageItem]);
-      updateQuality([secondBackstageItem]);
       updateQuality([thirdBackstageItem]);
-      expect(legendaryItem).toStrictEqual(expectedLegendaryItem);
-      expect(firstBackstageItem).toStrictEqual(expectedFirstBackstageItem);
-      expect(secondBackstageItem).toStrictEqual(expectedsecondBackstageItem);
       expect(thirdBackstageItem).toStrictEqual(expectedThirdBackstageItem);
     });
+
+    // quality cannot exceed 50
+    it('quality is never higher than 50', () => {
+      const backstageItem = new Item('Backstage passes to a TAFKAL80ETC concert', 37, 50);
+      const expectedBackstageItem = new Item('Backstage passes to a TAFKAL80ETC concert', 36, 50);
+      updateQuality([backstageItem]);
+      expect(backstageItem).toStrictEqual(expectedBackstageItem);
+    });
   });
-  // });
+
+  describe('sulfuras', () => {
+    it('sell_in and quality never changes', () => {
+      const legendaryItem = new Item('Sulfuras, Hand of Ragnaros', 0, 80);
+      const expectedLegendaryItem = new Item('Sulfuras, Hand of Ragnaros', 0, 80);
+
+      updateQuality([legendaryItem]);
+      expect(legendaryItem).toStrictEqual(expectedLegendaryItem);
+    });
+  });
 
   // this test fails because I don't have the logic within the actual updateQuality function yet
   describe('conjured items', () => {

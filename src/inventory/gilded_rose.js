@@ -21,59 +21,102 @@ const items = [
 
 updateQuality(items);
 */
+function isStandardItem(item) {
+  return (item.name != 'Aged Brie' &&
+    item.name != 'Backstage passes to a TAFKAL80ETC concert' &&
+    item.name != 'Sulfuras, Hand of Ragnaros')
+};
+function decreaseQuality(item, amount = 1) {
+  item.quality -= amount;
+}
+function increaseQuality(item, amount = 1) {
+  item.quality += amount;
+}
+function decreaseSellIn(item, amount = 1) {
+  item.sell_in -= 1;
+}
+function standardItemChanges(item) {
+  // then check that the quality between 0-50, and decrease the quality by 1
+  if (item.quality > 0 && item.quality < 50) {
+    decreaseQuality(item, 1);
+    // if the sell_in becomes negative, decrease quality again by 1
+    if(item.sell_in < 0) {
+      decreaseQuality(item, 1);
+    }
+  }
+}
+function agedBrieQuality(item) {
+  const { quality } = item;
+  // no matter what, decrease the sell_in
+  decreaseSellIn(item, 1);
+  if (quality > 0 && quality < 50) {
+    switch (true) {
+      // if the sell_in is negative (and quality is not exactly 50), increase the brie quality by 2
+      case item.sell_in < 0:
+        // if(quality !== 50) {
+          increaseQuality(item, 2);
+          break;
+        // }
+      // if the quality is between 0-50, increase the brie quality by 1
+      default: 
+        // if(quality !== 50) {
+          increaseQuality(item, 1);
+          break;
+        // }
+    }
+  }
+};
+function backstagePassesQuality(item) {
+  const { sell_in }= item;
+  // decrease the sell_in no matter what
+  decreaseSellIn(item);
+  // then check if the quality is less than 50
+  if(item.quality < 50){
+    switch (true) {
+      //increase the quality by 1 if the sell_in is between 11-50
+      case sell_in > 10: 
+        increaseQuality(item, 1);
+        break;
+      // //increase the quality by 2 if the sell_in is between 6-10
+      case sell_in > 5 && sell_in <= 10:
+        increaseQuality(item, 2);
+        break;
+      // //increase the quality by 3 if the sell_in is between 1-5
+      case sell_in > 0 && sell_in <= 5:
+        increaseQuality(item, 3);
+        break;
+      //decrease quality all the way if the sell_in is 0 or less
+      case sell_in <= 0: 
+        item.quality = item.quality - item.quality;
+        break;
+    }
+  }
+}
+
 export function updateQuality(items) {
   for (var i = 0; i < items.length; i++) {
-    // if it's anything but the aged brie, the passes, sulfuras, && the quality is still above 0, reduce quality by 1
-    if (items[i].name != 'Aged Brie' && 
-        items[i].name != 'Backstage passes to a TAFKAL80ETC concert' && 
-        items[i].name != 'Sulfuras, Hand of Ragnaros' && 
-        items[i].quality > 0) {
-          items[i].quality = items[i].quality - 1;
-    } else { //OTHERWISE...
-        // if the quality is still under 50, && the item is either the brie or the passes, increase the quality by 1
-        if ((items[i].quality < 50) &&
-            (items[i].name == 'Backstage passes to a TAFKAL80ETC concert' || 
-            items[i].name == 'Aged Brie')) {
-              items[i].quality = items[i].quality + 1
-          }
-        // ALSO...if the item is ONLY the passes and the quality is still less than 50...
-        if (items[i].name == 'Backstage passes to a TAFKAL80ETC concert' && 
-            items[i].quality < 50) {
-          // and the sell_in this less than 11, increase the quality AGAIN by 1 (2 total)
-          if (items[i].sell_in <= 10) {
-            items[i].quality = items[i].quality + 1
-          }
-          // and the sell_in this less than 6, increase the quality AGAIN by 1 (3 total)
-          if (items[i].sell_in <= 5) {
-            items[i].quality = items[i].quality + 1
-          }
-          // and once the passes get to sell_in of 0, the lose all quality
-          if (items[i].sell_in <= 0) {
-            items[i].quality = items[i].quality - items[i].quality
-          }
-        }
-      }
-    
-    // ALSO...if the item is not sulfuras, the sell_in will go down by 1
-    if (items[i].name != 'Sulfuras, Hand of Ragnaros') {
-      items[i].sell_in = items[i].sell_in - 1;
+    // for "standard" items
+    if (isStandardItem(items[i])) {
+      // if it's anything but the aged brie, the passes, sulfuras, first reduce the sell_in by 1
+      decreaseSellIn(items[i]);
+      // checks the quality and sell_in for "standard" items and changes values accordingly
+      standardItemChanges(items[i]);
+      // continue with the next item in the loop
+      continue;
     }
-    
-    // ALSO...
-    if (items[i].sell_in < 0) {
-      if (items[i].name != 'Aged Brie') {
-        if (items[i].name != 'Backstage passes to a TAFKAL80ETC concert') {
-          if (items[i].quality > 0) {
-            if (items[i].name != 'Sulfuras, Hand of Ragnaros') {
-              items[i].quality = items[i].quality - 1
-            }
-          }
-        } 
-      } else {
-        if (items[i].quality < 50) {
-          items[i].quality = items[i].quality + 1
-        }
+    // if the item is sulfuras, don't do anything, and continue to the next item in the loop
+    if (items[i].name === 'Sulfuras, Hand of Ragnaros') continue;
+    // for aged brie
+    if (items[i].name === 'Aged Brie') {
+     // checks the quality of brie and determines if the quality is increased by 1 or 2
+      agedBrieQuality(items[i]);
+        continue;
       }
+      //for backstage passes
+    if (items[i].name === 'Backstage passes to a TAFKAL80ETC concert') {
+      // backstagePassesQuality will decrease the sell_in, and determine how much to decrease the quality based on that sell_in result
+      backstagePassesQuality(items[i]);
+      continue;
     }
   }
 }
